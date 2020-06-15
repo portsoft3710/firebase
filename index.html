@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>プッシュ通知の購読</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" type="text/css" href="./bootstrap.min.css">
+  <script src="https://www.gstatic.com/firebasejs/5.5.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.5.2/firebase-messaging.js"></script>
+</head>
+
+<body>
+
+  <div class="col-sm-3"></div>
+
+  <div class="col-sm-6">
+    <h1 class="text-center">プッシュ通知の購読</h1>
+    <h2 id="newitem" class="text-center"></h2>
+    <button id="button" onclick="getSubscription()" class="btn center-block"></button>
+  </div>
+
+  <div class="col-sm-3"></div>
+
+  <script>
+
+    // Firebase のSDKを利用し、SenderIDを設定して初期化
+
+    const config = {
+      messagingSenderId: "969261258912"
+    };
+    firebase.initializeApp(config);
+    const messaging = firebase.messaging();
+    messaging.usePublicVapidKey("BCfmbSIVoFBCK5l1BHzG-PrrvarFubEOw3i5aC-FYly8PJaFjfDj3nGHKgaqzkJwzzAIayPM04Sz-WmLNIR9sw4");
+
+// Service Worker ファイルを登録し、ボタン表示を行う
+    registSW();
+    initialButton();
+
+    function initialButton() {
+      messaging.getToken().then(token => {
+        if (token) {
+          document.getElementById("button").innerText = "プッシュ通知を購読中";
+        } else {
+          document.getElementById("button").innerText = "プッシュ通知を受け取る";
+        }
+      }).catch(function (err) {
+        console.log('An error occurred while retrieving token. ', err);
+      });
+    }
+
+// トークンが未取得の場合 = プッシュ通知を未購読の場合、プッシュ通知の登録許可を行う
+// すでに購読済みの場合、取得済みのFirebase用トークンを表示
+
+    function getSubscription() {
+      messaging.getToken().then(token => {
+        if (!token) {
+          getNotification();
+        } else {
+          displayToken();
+        }
+      }).catch(function (err) {
+        console.log('An error occurred while retrieving token. ', err);
+      });
+    }
+
+//  Firebase のSDKを使い、プッシュ通知の購読処理を行う
+
+    function getNotification() {
+      messaging.requestPermission().then(function () {
+        console.log('Notification permission granted.');
+        displayToken();
+        initialButton();
+      }).catch(function (err) {
+        console.log('Unable to get permission to notify.', err);
+      });
+    }
+
+//　トークン表示
+
+    function displayToken() {
+      messaging.getToken().then(token => {
+        if (token) {
+          console.log(token);
+        } else {
+          console.log('No Instance ID token available. Request permission to generate one.');
+        }
+      }).catch(function (err) {
+        console.log('An error occurred while retrieving token. ', err);
+      });
+    }
+
+//　Service Worker ファイルを登録
+
+    function registSW() {
+
+      // Service Worker ファイル「firebaes-messaging-sw.js」を登録する
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            .then(function (registration) {
+              console.log('firebase-messaging-sw.js registration successful with scope: ', registration.scope);
+            }, function (err) {
+              console.log('firebase-messaging-sw.js registration failed: ', err);
+            });
+        });
+      }
+    }
+  </script>
+</body>
+
+</html>
