@@ -119,7 +119,7 @@ $(document).ready(function(){
         var data = {"subscription" : subscription.endpoint};
         $.ajax({
             type: "POST",
-            url: "/recieve.php",
+            url: "http://porttest.php.xdomain.jp/pushTest/recieve.php",
             dataType: "json",
             cache: false,
             data: data
